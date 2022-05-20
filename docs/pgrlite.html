@@ -338,7 +338,7 @@ expensive Rust struct ot Python object conversion than using it directly. For ex
 <dt class="sig sig-object py" id="pgrlite.pgrlite.SeqIndexDB">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pgrlite.pgrlite.</span></span><span class="sig-name descname"><span class="pre">SeqIndexDB</span></span><a class="headerlink" href="#pgrlite.pgrlite.SeqIndexDB" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
-<p>A call that store the pangenomics index and seqeunce with multiple backend storage options (AGC, fasta file, memory)
+<p>A class that stores pangenomics indices and seqeunces with multiple backend storage options (AGC, fasta file, memory)
 Large set of genomic sequenes, a user should use AGC backend. A binary file provides the command <code class="docutils literal notranslate"><span class="pre">pgr-mdb</span></code>
 which can read an AGC to create the index file. For example, we can create the index files from an AGC file:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span># create a file that contains a list of file that contains a set of files from which we want to build the indices
