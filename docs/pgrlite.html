@@ -364,7 +364,7 @@ rebuild the SHIMMER index with different parameters for a different resolution.<
 the <code class="docutils literal notranslate"><span class="pre">query_fragment_to_hps()</span></code> method.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="pgrlite.pgrlite.SeqIndexDB.get_seq">
-<span class="sig-name descname"><span class="pre">get_seq</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pgrlite.pgrlite.SeqIndexDB.get_seq" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">get_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctg_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrlite.pgrlite.SeqIndexDB.get_seq" title="Permalink to this definition">¶</a></dt>
 <dd><p>fetch a sequence</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
@@ -582,7 +582,7 @@ orientation(to the shimmer pair)) defined as:</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pgrlite.pgrlite.SeqIndexDB.query_fragment_to_hps">
-<span class="sig-name descname"><span class="pre">query_fragment_to_hps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrlite.pgrlite.SeqIndexDB.query_fragment_to_hps" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">query_fragment_to_hps</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penality</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_query_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_target_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_aln_span</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrlite.pgrlite.SeqIndexDB.query_fragment_to_hps" title="Permalink to this definition">¶</a></dt>
 <dd><p>use a fragement of sequence to query the database to get all hits</p>
 <p>sparese dynamic programming is performed to long chain of alignment</p>
 <dl class="field-list simple">
