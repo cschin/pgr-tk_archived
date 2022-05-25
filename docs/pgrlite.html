@@ -363,6 +363,23 @@ rebuild the SHIMMER index with different parameters for a different resolution.<
 <p>Once the index is built, the database can be queried quickly by using the <code class="docutils literal notranslate"><span class="pre">query_fragment()</span></code> or
 the <code class="docutils literal notranslate"><span class="pre">query_fragment_to_hps()</span></code> method.</p>
 <dl class="py method">
+<dt class="sig sig-object py" id="pgrlite.pgrlite.SeqIndexDB.generate_smp_adj_list">
+<span class="sig-name descname"><span class="pre">generate_smp_adj_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pgrlite.pgrlite.SeqIndexDB.generate_smp_adj_list" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get adjecent list of the shimmer graph shimmer_pair -&gt; shimmer_pair</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>min_count</strong> (<em>int</em>) – the minimum number of times a pair of shimmers must be observed to be included in the graph</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of pairs of shimmer pairs ((h00, h01, orientation0),(h10, h11, orientation1))</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pgrlite.pgrlite.SeqIndexDB.get_seq">
 <span class="sig-name descname"><span class="pre">get_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctg_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrlite.pgrlite.SeqIndexDB.get_seq" title="Permalink to this definition">¶</a></dt>
 <dd><p>fetch a sequence</p>
