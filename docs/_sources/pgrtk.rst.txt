@@ -4,7 +4,7 @@ pgrlite package
 Module contents
 ---------------
 
-pgatr
+pgatk
 ^^^^^^^
 
 .. automodule:: pgrtk 
