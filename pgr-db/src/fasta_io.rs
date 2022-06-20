@@ -19,6 +19,8 @@ pub struct FastaReader<R> {
     inner: R,
     t: Fastx,
     filename: String,
+    seq_capacity: usize,
+    keep_source: bool,
 }
 
 pub fn reverse_complement(seq: &Vec<u8>) -> Vec<u8> {
@@ -36,7 +38,12 @@ pub fn reverse_complement(seq: &Vec<u8>) -> Vec<u8> {
 }
 
 impl<R: BufRead> FastaReader<R> {
-    pub fn new(mut inner: R, filename: &String) -> Result<Self, io::Error> {
+    pub fn new(
+        mut inner: R,
+        filename: &String,
+        seq_capacity: usize,
+        keep_source: bool,
+    ) -> Result<Self, io::Error> {
         let t: Fastx;
         {
             let r = inner.by_ref();
@@ -58,6 +65,8 @@ impl<R: BufRead> FastaReader<R> {
             inner,
             t,
             filename: filename.to_string(),
+            seq_capacity,
+            keep_source,
         })
     }
 
@@ -69,8 +78,8 @@ impl<R: BufRead> FastaReader<R> {
     }
 
     pub fn fasta_next_rec(&mut self) -> Option<io::Result<SeqRec>> {
-        let mut id_tmp = Vec::<u8>::with_capacity(512);
-        let mut seq = Vec::<u8>::with_capacity(1 << 14);
+        let mut id_tmp = Vec::<u8>::with_capacity(128);
+        let mut seq = Vec::<u8>::with_capacity(self.seq_capacity);
 
         let res = self.inner.read_until(b'\n', &mut id_tmp);
         if res.is_err() {
@@ -79,21 +88,22 @@ impl<R: BufRead> FastaReader<R> {
             return None;
         }
         let mut r = BufReader::new(&id_tmp[..]);
-        let mut id = Vec::<u8>::with_capacity(512);
-        let res = r.read_until(b' ', &mut id);
-        if res.is_err() {
-            Some(res);
-        }
+        let mut id = Vec::<u8>::with_capacity(128);
+        let _res = r.read_until(b' ', &mut id);
+
         let id = id
             .into_iter()
             .filter(|c| *c != b'\n' && *c != b' ' && *c != b'\r')
-            .collect();
+            .collect::<Vec<u8>>();
         let _x = self.inner.read_until(b'>', &mut seq);
-        let seq = seq
-            .into_iter()
+        let mut seq = seq
+            .drain(..)
             .filter(|c| *c != b'\n' && *c != b'>' && *c != b'\r')
-            .collect();
-        let source = Some(self.filename.to_string());
+            .collect::<Vec<u8>>();
+        if seq.capacity() as f32 > seq.len() as f32 * 1.2 {
+            seq.shrink_to_fit();
+        }
+        let source = if self.keep_source {Some(self.filename.to_string())} else {None};
         let rec = SeqRec {
             source,
             id: id,
@@ -104,31 +114,36 @@ impl<R: BufRead> FastaReader<R> {
     }
 
     pub fn fastq_next_rec(&mut self) -> Option<io::Result<SeqRec>> {
-        let mut buf = Vec::<u8>::with_capacity(512);
-        let mut id_tmp = Vec::<u8>::with_capacity(512);
-        let mut seq = Vec::<u8>::with_capacity(1 << 14);
+        let mut id_tmp = Vec::<u8>::with_capacity(128);
+        let mut seq = Vec::<u8>::with_capacity(self.seq_capacity);
 
         let _res = self.inner.read_until(b'\n', &mut id_tmp); //read id
-                                                              // fetch the first id up to the first space, strip '\n'
+        // fetch the first id up to the first space, strip '\n'
         let mut r = BufReader::new(&id_tmp[..]);
-        let mut id = Vec::<u8>::with_capacity(512);
+        let mut id = Vec::<u8>::with_capacity(128);
         let _res = r.read_until(b' ', &mut id);
         let id = id
             .into_iter()
             .filter(|c| *c != b'\n' && *c != b' ' && *c != b'\r')
-            .collect();
+            .collect::<Vec<u8>>();
         // get the seq
         let _res = self.inner.read_until(b'\n', &mut seq);
-        let seq = seq
-            .into_iter()
+
+        let mut seq = seq
+            .drain(..)
             .filter(|c| *c != b'\n' && *c != b'\r')
-            .collect();
+            .collect::<Vec<u8>>();
+        if seq.capacity() as f32 > seq.len() as f32 * 1.2 {
+            seq.shrink_to_fit();
+        }
+        let source = if self.keep_source {Some(self.filename.to_string())} else {None};
         let rec = SeqRec {
-            source: Some(self.filename.to_string()),
+            source,
             id: id,
             seq: seq,
         };
         // ignore QV
+        let mut buf = Vec::<u8>::with_capacity(1024);
         let _res = self.inner.read_until(b'+', &mut buf);
         let _res = self.inner.read_until(b'\n', &mut buf);
         let _res = self.inner.read_until(b'\n', &mut buf);
@@ -148,6 +163,69 @@ impl<R: BufRead> Iterator for FastaReader<R> {
         self.next_rec()
     }
 }
+
+
+pub struct FastqStreamReader {
+    inner: std::io::Stdin,
+    seq_capacity: usize 
+}
+
+impl FastqStreamReader {
+    pub fn new(seq_capacity: usize) -> Self {
+        FastqStreamReader {
+            inner: std::io::stdin(),
+            seq_capacity
+        } 
+    }
+}
+
+impl Iterator for FastqStreamReader {
+    type Item = io::Result<SeqRec>;
+    fn next(&mut self) -> Option<Self::Item> {
+        let mut tmp = String::with_capacity(128);
+        match self.inner.read_line(&mut tmp) {
+            Ok(n) => {
+                if n == 0 {
+                    return None
+                }
+                let tmp = tmp.trim();
+                if &tmp[0..1] == "@" {
+                    let id = tmp[1..].as_bytes().to_vec();
+                    let mut seq = String::with_capacity(self.seq_capacity);
+                    if self.inner.read_line(&mut seq).unwrap_or(0) == 0 {
+                        return None
+                    }
+                    let seq = seq.trim();
+                    let seq = seq[..].as_bytes().to_vec();
+                    let mut buf = String::with_capacity(self.seq_capacity);
+                    if self.inner.read_line(&mut buf).unwrap_or(0) == 0 {
+                        return None
+                    };
+                    if self.inner.read_line(&mut buf).unwrap_or(0) == 0 {
+                        return None
+                    };
+                    let source = None;
+                    let rec = SeqRec {
+                        source,
+                        id: id,
+                        seq: seq,
+                    }; 
+                    Some(Ok(rec))
+                } else {
+                    None
+                }
+            },
+            Err(_) => {
+                None
+            }
+        }
+    }
+}
+
+
+
+
+
 
 fn encode_biseq(s: Vec<u8>) -> Vec<u8> {
     let fourbit_map_f: [u8; 256] = [
@@ -224,7 +302,7 @@ pub fn build(seq_list_file: &String, out_prefix: &String) -> Result<usize, io::E
         let _ = reader.seek(SeekFrom::Start(0));
         if is_gzfile {
             let fastx_buf = BufReader::new(MultiGzDecoder::new(&mut reader));
-            let mut fastx_reader = FastaReader::new(fastx_buf, &input_fn)?;
+            let mut fastx_reader = FastaReader::new(fastx_buf, &input_fn, 1 << 14, true)?;
             while let Some(r) = fastx_reader.next_rec() {
                 let r = r.unwrap();
                 if r.seq.len() < 500 {
@@ -247,7 +325,7 @@ pub fn build(seq_list_file: &String, out_prefix: &String) -> Result<usize, io::E
                 seq_id += 1;
             }
         } else {
-            let mut fastx_reader = FastaReader::new(reader, &input_fn)?;
+            let mut fastx_reader = FastaReader::new(reader, &input_fn, 1 << 14, true)?;
             while let Some(r) = fastx_reader.next_rec() {
                 let r = r.unwrap();
                 if r.seq.len() < 500 {

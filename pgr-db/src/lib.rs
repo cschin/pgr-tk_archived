@@ -3,14 +3,20 @@ pub const VERSION_STRING: &'static str = env!("VERSION_STRING");
 pub mod agc_io;
 pub mod aln;
 pub mod bindings;
+pub mod ec;
+pub mod fasta_io;
+pub mod gff_db;
+pub mod graph_utils;
+pub mod kmer_filter;
 pub mod seq_db;
+pub mod seqs2variants;
 pub mod shmmrutils;
 
 #[cfg(test)]
 mod tests {
+    use crate::fasta_io::FastaReader;
     use crate::shmmrutils::{self, match_reads, DeltaPoint};
     use flate2::bufread::MultiGzDecoder;
-    use pgr_utils::fasta_io::FastaReader;
     use std::collections::HashMap;
     use std::fs::File;
     use std::io::{BufRead, BufReader, Read};
@@ -50,7 +56,8 @@ mod tests {
             std_buf
         };
 
-        let mut fastx_reader = FastaReader::new(fastx_buf, &filepath.to_string()).unwrap();
+        let mut fastx_reader =
+            FastaReader::new(fastx_buf, &filepath.to_string(), 1 << 12, true).unwrap();
         while let Some(rec) = fastx_reader.next_rec() {
             let rec = rec.unwrap();
             let seqname = String::from_utf8_lossy(&rec.id).into_owned();
@@ -158,10 +165,10 @@ mod tests {
         let cs0 = sdb.get_seq_by_id(0);
         let cs1 = sdb.get_seq_by_id(1);
         let shmmr_spec = seq_db::SHMMRSPEC;
-        let shmmr0 = shmmrutils::sequence_to_shmmrs(0, &cs0, &shmmr_spec);
-        let shmmr1 = shmmrutils::sequence_to_shmmrs(0, &cs1, &shmmr_spec);
-        let shmmr0 = shmmr0.iter().map(|m| m.x >> 8).collect::<Vec<u64>>();
-        let shmmr1 = shmmr1.iter().rev().map(|m| m.x >> 8).collect::<Vec<u64>>();
+        let shmmr0 = shmmrutils::sequence_to_shmmrs(0, &cs0, &shmmr_spec, false);
+        let shmmr1 = shmmrutils::sequence_to_shmmrs(0, &cs1, &shmmr_spec, false);
+        let shmmr0 = shmmr0.iter().map(|m| m.hash()).collect::<Vec<u64>>();
+        let shmmr1 = shmmr1.iter().rev().map(|m| m.hash()).collect::<Vec<u64>>();
         assert!(shmmr0.len() > 0);
         assert_eq!(shmmr0, shmmr1);
     }
@@ -306,7 +313,6 @@ mod tests {
         Ok(())
     }
 
-
     #[test]
     fn test_frag_map_to_adj_list() -> Result<(), std::io::Error> {
         use crate::agc_io::AGCFile;
@@ -320,5 +326,28 @@ mod tests {
             println!("{:?}", v);
         });
         Ok(())
+    }
+
+    #[test]
+    fn test_shmmr_reduction_boundary_condition() {
+        // In some cases, the numnber of shimmers might be less than the number of the reducetion factor.
+        // In such cases, we want to output the first and the last shimmers as if there are other bigger one surrounding them.
+        let seq = b"CCAGTTGTATCCATGACAAAGATGAGGCCGCGAGGAGGGCGAGTGGGTTTGGGGGCAGGCAGAGTGCCTTGGAGAACTTACAGGTCCTGCCACAATCCTAATGCAAGGATGGAGCTGCAAGTTCAGTTTGGGAATCATCAGCCTGGATTGGTTTGGTGGAAGCCAGGGAGTGGTTGAGGACCCCCACAGGGGAGCTCTGAGGAAGGAAGTTCCGAAGGAGGGAACGTAAGAAATGACCAGGTCAGAACCAAGGGTGGTCCAGAAGCTAACCCTTAGCTTAGGGACAGTTTCACAGAGAACACGTCCATGATGCAAGACTCTGCTGAGGGCCTGGAGCAGTGAAGACTGGGGCAAGGTCACCCTCTGGGAAGTGAAGTCACCAGAGACCTTGCGGAGCAGCTTTGAGAGTTCTCTGAGTAGGAAGGTAACAGAATGTGAAGGACACTGGAGAGAAGGCCAATAGGAAGCAAACAAAAACAGGCCAAGGAAACCCAGTACAGGGGGCTGCAGGGCCCAGGGAGTGGGTCCCTCATCTCTCCTCCCCACGCTTGGCCAGGTCCCCACCTCCCCCGGGAGTGCGTGGGCTTTGAGGCTGTGCAGGAAGTGCCGGTGGGGCTGGTGCAGCCGGCCAGCGCAACCCTGTACGACTACTACAACCCCGGTGAGCACTGCAGGACACCCTGAAATTCAGGAGAACTTTGGCATAGGTGCCCTCCTATGGGACAATGGACACCGGGGTAGTGAGGGGGCAGAGAGCCCTGGGGCTCCCTGGGACTGAGGAGGCAGAATGGAGGGGCCTGTGCCCTAACTCCTCTCTGTTCTCCAGAGCGCAGATGTTCTGTGTTTTACGGGGCACCAAGTAAGAGCAGACTCTTGGCCACCTTGTGTTCTGCTGAAGTCTGCCAGTGTGCTGAGGGTGAGACTGAGGGCCTGGGGCGGGGCAGT";
+        let seq2 = b"CCAGTTGTATCCATGACAAAGATGAGGCCGCGAGGAGGGCGAGTGGGTTTGGGGGCAGGCAGAGTGCCTTGGAGAACTTACAGGTCCTGCCACAATCCTAATGCAAGGATGGAGCTGCAAGTTCAGTTTGGGAATCATCAGCCTGGATTGGTTTGGTGGAAGCCAGGGAGTGGTTGAGACCCCCACAGGGGAGCTCTGAGGAAGGAAGTTCCGAAGGAGGGAACGTAAGAAATGACCAGGTCAGAACCAAGGGTGGTCCAGAAGCTAACCCTTAGCTTAGGGACAGTTTCACAGAGAACACGTCCATGATGCAAGACTCTGCTGAGGGCCTGGAGCAGTGAAGACTGGGGCAAGGTCACCCTCTGGGAAGTGAAGTCACCAGAGACCTTGCGGAGCAGCTTTGAGAGTTCTCTGAGTAGGAAGGTAACAGAATGTGAAGGACACTGGAGAGAAGGCCAATAGGAAGCAAACAAAAACAGGCCAAGGAAACCCAGTACAGGGGGCTGCAGGGCCCAGGGAGTGGGTCCCTCATCTCTCCTCCCCACGCTTGGCCAGGTCCCCACCTCCCGGGAGTGCGTGGGCTTTGAGGCTGTGCAGGAAGTGCCGGTGGGGCTGGTGCAGCCGGCCAGCGCAACCCTGTACGACTACTACAACCCCGGTGAGCACTGCAGGACACCCTGAAATTCAGGAGAACTTTGGCATAGGTGCCCTCCTATGGGACAATGGACACCGGGGTAGTGAGGGGGCAGAGAGCCCTGGGGCTCCCTGGGACTGAGGAGGCAGAATGGAGGGGCCTGTGCCCTAACTCCTCTCTGTTCTCCAGAGCGCAGATGTTCTGTGTTTTACGGGGCACCAAGTAAGAGCAGACTCTTGGCCACCTTGTGTTCTGCTGAAGTCTGCCAGTGTGCTGAGGGTGAGACTGAGGGCCTGGGGCGGGGCAGT";
+        use shmmrutils::sequence_to_shmmrs;
+        use shmmrutils::ShmmrSpec;
+        let spec = ShmmrSpec {
+            w: 24,
+            k: 24,
+            r: 12,
+            min_span: 24,
+            sketch: false,
+        };
+        let out1 = sequence_to_shmmrs(0, &seq.to_vec(), &spec, true);
+        println!("out1: {} {:?}", out1.len(), out1);
+        let out2 = sequence_to_shmmrs(0, &seq2.to_vec(), &spec, true);
+        println!("out2: {} {:?}", out2.len(), out2);
+        assert!(out1.len() == 2);
+        assert!(out2.len() == 2);
     }
 }

@@ -1,8 +1,7 @@
 #![allow(dead_code)]
 
+use rustc_hash::FxHashMap;
 use std::fmt;
-
-use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub struct OvlpMatch {
@@ -33,8 +32,8 @@ pub struct DeltaPoint {
     pub dk: i32,
 }
 
-fn track_delta_point(
-    delta_pts: &HashMap<(u32, i32), DeltaPoint>,
+fn track_delta_point<'a>(
+    delta_pts: &'a FxHashMap<(u32, i32), DeltaPoint>,
     d_final: u32,
     k_final: i32,
     s: u32,
@@ -54,9 +53,9 @@ fn track_delta_point(
     dpts
 }
 
-pub fn match_reads(
-    seq0: &Vec<u8>,
-    seq1: &Vec<u8>,
+pub fn match_reads<'a>(
+    seq0: &'a Vec<u8>,
+    seq1: &'a Vec<u8>,
     get_delta: bool,
     tol: f64,
     min_match_len: u32,
@@ -83,13 +82,10 @@ pub fn match_reads(
     let band_tolerance = bandwidth;
     let mut k_min = 0_i32;
     let mut k_max = 0_i32;
-    let mut uv_map = HashMap::<i32, (u32, u32)>::new();
+    let mut uv_map = FxHashMap::<i32, (u32, u32)>::default();
     // uv_map: maping k to the u, v, which keep the d path end in k
-    let mut delta_pts = HashMap::<(u32, i32), DeltaPoint>::new();
-    let mut x: u32;
-    let mut y: u32;
-    let mut x1: u32;
-    let mut y1: u32;
+    let mut delta_pts = FxHashMap::<(u32, i32), DeltaPoint>::default();
+
     let mut best_m = -1_i32;
     let mut matched = false;
     let mut d_final = 0_u32;
@@ -118,6 +114,10 @@ pub fn match_reads(
             break;
         }
         for k in (k_min..=k_max).step_by(2) {
+            let mut x: u32;
+            let mut y: u32;
+            let x1: u32;
+            let y1: u32;
             let (_, vn) = uv_map.get(&(k - 1)).unwrap();
             let (_, vp) = uv_map.get(&(k + 1)).unwrap();
             if k == k_min || ((k != k_max) && vn < vp) {
@@ -233,17 +233,42 @@ pub struct MM128 {
 
 impl fmt::Display for MM128 {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let hash = self.x >> 8;
-        let span = (self.x & 0xFF) as u8;
-        let rid = (self.y >> 32) as u32;
-        let pos = ((self.y & 0xFFFFFFFF) >> 1) as u32;
-        let strand = (self.y & 0x1) as u8;
-        write!(f, "({}, {}, {}, {}, {})", hash, span, rid, pos, strand)
+        write!(
+            f,
+            "({}, {}, {}, {}, {})",
+            self.hash(),
+            self.span(),
+            self.rid(),
+            self.pos(),
+            self.strand()
+        )
     }
 }
+
 impl MM128 {
+    #[inline(always)]
+    pub fn hash(&self) -> u64 {
+        self.x >> 8
+
+    }
+    #[inline(always)]
+    pub fn span(&self) -> u8 {
+        (self.x & 0xFF) as u8
+    }
+
+    #[inline(always)]
+    pub fn rid(&self) -> u32 {
+        (self.y >> 32) as u32
+    }
+
+    #[inline(always)]
     pub fn pos(&self) -> u32 {
         ((self.y & 0xFFFFFFFF) >> 1) as u32
+    }
+
+    #[inline(always)]
+    pub fn strand(&self) -> u8 {
+        (self.y & 0x1) as u8
     }
 }
 
@@ -270,7 +295,7 @@ fn _u64hash(key: u64) -> u64 {
 }
 
 pub struct RingBuffer {
-    pub v: Vec<MM128>,
+    v: Vec<MM128>,
     pub size: usize,
     pub start_pos: usize,
     pub end_pos: usize,
@@ -335,13 +360,29 @@ impl RingBuffer {
     }
 }
 
-pub fn reduce_shmmr(mers: Vec<MM128>, r: u32) -> Vec<MM128> {
-    let mut shimmers = Vec::<MM128>::new();
+pub fn reduce_shmmr(mers: Vec<MM128>, r: u32, padding: bool) -> Vec<MM128> {
+    let mut shmmrs = Vec::<MM128>::new();
     let mut rbuf = RingBuffer::new(r as usize);
     let mut min_mer = MM128 {
         x: u64::MAX,
         y: u64::MAX,
     };
+
+    // padding the shmmr vec with the max min_mer
+    // this makes sure the first and the least are always in the output
+    let mut mers2 = Vec::<MM128>::new();
+    let mut mers: &Vec<MM128> = &mers;
+    if padding {
+        (0..r - 1).for_each(|_| {
+            mers2.push(min_mer);
+        });
+        mers2.extend(mers);
+        (0..r - 1).for_each(|_| {
+            mers2.push(min_mer);
+        });
+        mers = &mers2;
+    }
+
     let mut pos = 0;
     let mut mdist = 0;
     loop {
@@ -356,7 +397,7 @@ pub fn reduce_shmmr(mers: Vec<MM128>, r: u32) -> Vec<MM128> {
             for i in 0..rbuf.size as usize {
                 let mm = rbuf.get(i);
                 if mm.x == min_mer.x {
-                    shimmers.push(mm);
+                    shmmrs.push(mm);
                     min_mer = mm;
                     last_i = i;
                 }
@@ -365,7 +406,7 @@ pub fn reduce_shmmr(mers: Vec<MM128>, r: u32) -> Vec<MM128> {
             pos += 1;
             continue;
         } else if m.x <= min_mer.x && pos >= r as usize {
-            shimmers.push(m);
+            shmmrs.push(m);
             min_mer = m;
             mdist = 0;
             pos += 1;
@@ -374,7 +415,7 @@ pub fn reduce_shmmr(mers: Vec<MM128>, r: u32) -> Vec<MM128> {
         mdist += 1;
         pos += 1;
     }
-    shimmers
+    shmmrs
 }
 
 pub fn sequence_to_shmmrs1(
@@ -384,6 +425,7 @@ pub fn sequence_to_shmmrs1(
     k: u32,
     r: u32,
     min_span: u32,
+    padding: bool,
 ) -> Vec<MM128> {
     let base2bits: [u64; 256] = [
         0, 1, 2, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4,
@@ -475,7 +517,10 @@ pub fn sequence_to_shmmrs1(
             mdist = pos - ((min_mer.y & 0xFFFFFFFF) >> 1) as usize;
             pos += 1;
             continue;
-        } else if m.x <= min_mer.x && pos >= (w + k) as usize && pos < seq.len() - (w - k) as usize
+        } else if m.x <= min_mer.x
+            && pos >= (w + k) as usize
+            && pos < seq.len() - w as usize + k as usize
+            && pos < seq.len()
         {
             shmmrs.push(m);
             //println!("dbg0: {} {}", pos, m.x >> 8);
@@ -489,8 +534,8 @@ pub fn sequence_to_shmmrs1(
     }
 
     let shmmrs2 = shmmrs;
-    let shmmrs2 = reduce_shmmr(shmmrs2, r);
-    let shmmrs2 = reduce_shmmr(shmmrs2, r);
+    let shmmrs2 = reduce_shmmr(shmmrs2, r, padding);
+    let shmmrs2 = reduce_shmmr(shmmrs2, r, padding);
     let mut shmmrs3 = Vec::<MM128>::new();
     shmmrs2
         .iter()
@@ -614,10 +659,15 @@ pub fn sequence_to_shmmrs2(rid: u32, seq: &Vec<u8>, k: u32, r: u32, min_span: u3
     shmmrs2
 }
 
-pub fn sequence_to_shmmrs(rid: u32, seq: &Vec<u8>, shmmrspec: &ShmmrSpec) -> Vec<MM128> {
+pub fn sequence_to_shmmrs(
+    rid: u32,
+    seq: &Vec<u8>,
+    shmmrspec: &ShmmrSpec,
+    padding: bool,
+) -> Vec<MM128> {
     let (w, k, r, min_span) = (shmmrspec.w, shmmrspec.k, shmmrspec.r, shmmrspec.min_span);
     if !shmmrspec.sketch {
-        sequence_to_shmmrs1(rid, seq, w, k, r, min_span)
+        sequence_to_shmmrs1(rid, seq, w, k, r, min_span, padding)
     } else {
         sequence_to_shmmrs2(rid, seq, k, r, min_span)
     }
