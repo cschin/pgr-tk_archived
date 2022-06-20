@@ -4,7 +4,7 @@ pgrlite package
 Module contents
 ---------------
 
-pgrlite
+pgatr
 ^^^^^^^
 
 .. automodule:: pgrtk 
@@ -12,7 +12,7 @@ pgrlite
    :undoc-members:
    :show-inheritance:
 
-pgrlite.pgrlite
+pgrtk.pgrtk
 ^^^^^^^^^^^^^^^
 .. automodule:: pgrtk.pgrtk
    :members:
