@@ -7,14 +7,14 @@ Module contents
 pgrlite
 ^^^^^^^
 
-.. automodule:: pgrlite 
+.. automodule:: pgrtk 
    :members:
    :undoc-members:
    :show-inheritance:
 
 pgrlite.pgrlite
 ^^^^^^^^^^^^^^^
-.. automodule:: pgrlite.pgrlite
+.. automodule:: pgrtk.pgrtk
    :members:
    :undoc-members:
    :show-inheritance:

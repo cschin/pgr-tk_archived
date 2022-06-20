@@ -10,7 +10,7 @@ Welcome to pgr-tk's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-   pgrlite
+   pgrtk
 
 Indices and tables
 ==================

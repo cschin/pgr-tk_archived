@@ -1,4 +1,4 @@
-pushd ../pgr-py-lite/
+pushd ../pgr-tk/
 maturin develop --release
 popd
 make html
