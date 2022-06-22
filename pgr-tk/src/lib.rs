@@ -611,7 +611,7 @@ impl SeqIndexDB {
     /// Returns
     /// -------
     /// list
-    ///     list of node (node.0, node.1, node_count, is_leaf)
+    ///     list of node in the tuple (node, node_weight, is_leaf, global_rank, branch, branch_rank
     ///
     ///
 
