@@ -594,6 +594,44 @@ than the <cite>max_unique_count</cite></p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.map_positions_in_seq">
+<span class="sig-name descname"><span class="pre">map_positions_in_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">positions</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">penality</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_query_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_target_count</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_aln_span</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.map_positions_in_seq" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a sequence context, this function maps the specific positions in the context
+to the sequences in the database. The context sequence is aligned to the sequences
+in the database with sparse dynamic programming, then the regions include the
+positions of interest are identified. A wavefront alginment is performed to pin
+down the exact mapped poitions in the sequences in the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>positions</strong> (<em>list of integer</em>) – a list of integers of the position to map</p></li>
+<li><p><strong>seq</strong> (<em>list of bytes</em>) – a list of bytes representing the DNA sequence providing to context</p></li>
+<li><p><strong>penality</strong> (<em>float</em>) – the gap penalty factor used in sparse dyanmic programming for finding the hits</p></li>
+<li><p><strong>merge_range_tol</strong> (<em>int</em>) – a parameter used to merge the alignment ranges</p></li>
+<li><p><strong>max_count</strong> (<em>int</em>) – only use the shimmer pairs that less than the <code class="docutils literal notranslate"><span class="pre">max_count</span></code> for sparse dynamic programming</p></li>
+<li><p><strong>max_query_count</strong> (<em>int</em>) – only use the shimmer pairs that less than the <code class="docutils literal notranslate"><span class="pre">max_count</span></code> in the query sequence for sparse dynamic programming</p></li>
+<li><p><strong>max_query_count</strong> – only use the shimmer pairs that less than the <code class="docutils literal notranslate"><span class="pre">max_count</span></code> in the target sequence for sparse dynamic programming</p></li>
+<li><p><strong>max_aln_span</strong> (<em>int</em>) – the size of span used in the sparse dynamic alignment for finding the hits</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>a list of tuples of
+(<code class="docutils literal notranslate"><span class="pre">position_in_the_context</span></code>,
+(<code class="docutils literal notranslate"><span class="pre">target_seq_id</span></code>, <code class="docutils literal notranslate"><span class="pre">target_position</span></code>, <code class="docutils literal notranslate"><span class="pre">orientation</span></code>),
+(<code class="docutils literal notranslate"><span class="pre">context_end</span></code>, <code class="docutils literal notranslate"><span class="pre">context_end</span></code>),
+(<code class="docutils literal notranslate"><span class="pre">target_end</span></code>, <code class="docutils literal notranslate"><span class="pre">target_end</span></code>))</p>
+<p>the sequences from (<code class="docutils literal notranslate"><span class="pre">context_end</span></code>, <code class="docutils literal notranslate"><span class="pre">context_end</span></code>) in the context sequence and
+the sequences from (<code class="docutils literal notranslate"><span class="pre">target_end</span></code>, <code class="docutils literal notranslate"><span class="pre">target_end</span></code>) in the target sequnence are
+used for the detailed alignment to pin down the exact mapped positions.</p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.query_fragment">
 <span class="sig-name descname"><span class="pre">query_fragment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.query_fragment" title="Permalink to this definition">¶</a></dt>
 <dd><p>use a fragement of sequence to query the database to get all hits</p>
@@ -677,7 +715,7 @@ the <code class="docutils literal notranslate"><span class="pre">list_of_the_hit
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list of node (node.0, node.1, node_count, is_leaf)</p>
+<dd class="field-even"><p>list of node in the tuple (node, node_weight, is_leaf, global_rank, branch, branch_rank)</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>list</p>
