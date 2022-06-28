@@ -69,6 +69,28 @@ It includes a number modules for access the sequence data and query the sequence
 </pre></div>
 </div>
 <dl class="py function">
+<dt class="sig sig-object py" id="pgrtk.compute_graph_diffusion_entropy">
+<span class="sig-prename descclassname"><span class="pre">pgrtk.</span></span><span class="sig-name descname"><span class="pre">compute_graph_diffusion_entropy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gfa_fn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_nodes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.compute_graph_diffusion_entropy" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="simple">
+<dt>Give a GFA file name, compute an entropy by a simple diffusion model on the grap</dt><dd><p>and generate the list of the final diffusion weight for each node</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>gfa_fn</strong> (<em>string</em>) – a gfa filename</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><code class="docutils literal notranslate"><span class="pre">(entropy,</span> <span class="pre">list_of_diffusion_weight)</span></code></p>
+<p>list_of_diffusion_weight = <code class="docutils literal notranslate"><span class="pre">[(node_id,</span> <span class="pre">weight),</span> <span class="pre">...]</span></code></p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pgrtk.get_variant_calls">
 <span class="sig-prename descclassname"><span class="pre">pgrtk.</span></span><span class="sig-name descname"><span class="pre">get_variant_calls</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">aln_segs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref_bgn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctg_bgn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rs0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cs0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strand</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.get_variant_calls" title="Permalink to this definition">¶</a></dt>
 <dd><p>Generate a variant call internal representation from the alignment segments.</p>
@@ -119,6 +141,12 @@ a variant call record.</p>
 <dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pgrtk.map_intervals_in_sdb">
+<span class="sig-prename descclassname"><span class="pre">pgrtk.</span></span><span class="sig-name descname"><span class="pre">map_intervals_in_sdb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_index_db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_penality_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_range_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_query_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_target_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_aln_span</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.map_intervals_in_sdb" title="Permalink to this definition">¶</a></dt>
+<dd><p>TODO: Document</p>
 </dd></dl>
 
 <dl class="py function">
