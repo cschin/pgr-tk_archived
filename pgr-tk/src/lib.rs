@@ -437,11 +437,14 @@ impl SeqIndexDB {
                     let mut left_match = None;
                     let mut right_match = None;
                     hits.iter().for_each(|&(v, w)| {
+                        // println!("{:?} {:?} {:?}", pos, v, w);
                         if v.0 < pos {
                             left_match = Some((v, w));
+                            // println!("left set: {:?} {:?}", v, w);
                         }
                         if right_match.is_none() && pos < v.1 {
                             right_match = Some((v, w));
+                            // println!("right set: {:?} {:?}", v, w);
                         }
                     });
                     if left_match.is_some() && right_match.is_some() {
@@ -454,12 +457,12 @@ impl SeqIndexDB {
 
         // fetch the sequence for each match if possible
         let mut out = vec![];
+        if self.seq_info.is_none() {
+            return Ok(out);
+        };
         pos2hits.iter().for_each(|(pos, hits)| {
             hits.iter()
                 .for_each(|(seq_id, _score, left_match, right_match)| {
-                    if self.seq_info.is_none() {
-                        return;
-                    };
                     let (ctg, src, t_len) = self.seq_info.as_ref().unwrap().get(&seq_id).unwrap(); //TODO, check if seq_info is None
                     let same_orientation = if left_match.0 .2 == left_match.1 .2 {
                         true
@@ -482,7 +485,11 @@ impl SeqIndexDB {
                             te = left_match.1 .1 - shmmr_spec.k;
                         }
                     };
-                    // println!("{:?} {:?} {} {} {} {}", left_match, right_match, qb, qe, tb, te);
+                    if tb >= te {
+                        // println!("{:?} {:?} {} {} {} {}", left_match, right_match, qb, qe, tb, te);
+                        // TBD: raise an warning? or error? The coordinates are not consistent wit the shimmer alignment orientation
+                        return
+                    }
                     let mut t_seq = self
                         .get_sub_seq(
                             src.clone().unwrap().to_string(),
@@ -497,8 +504,12 @@ impl SeqIndexDB {
                     }
                     let q_seq = seq[qb as usize..qe as usize].to_vec();
                     let ovlp =
-                        pgr_db::shmmrutils::match_reads(&q_seq, &t_seq, true, 0.05, 1, 1, 100);
-
+                        pgr_db::shmmrutils::match_reads(&q_seq, &t_seq, true, 0.10, 1, 1, 1000);
+                    // if ovlp.is_none() {
+                    //    println!("aln fail for pos: {:?} {:?} {:?}", pos, left_match, right_match);
+                    //    println!("qseq: {}", String::from_utf8_lossy(&q_seq[..]));
+                    //    println!("tseq: {}", String::from_utf8_lossy(&t_seq[..]));
+                    // }
                     if ovlp.is_some() {
                         let dpos = pos - qb;
 

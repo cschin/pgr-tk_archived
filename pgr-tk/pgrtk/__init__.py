@@ -28,6 +28,7 @@ This shows a simple example to query the pangenomics database::
 """
 
 import pgrtk
+import numpy as np
 from .pgrtk import *
 
 __version__ = pgrtk.pgr_lib_version()
@@ -202,6 +203,51 @@ def query_sdb(seq_index_db, query_seq,
 
     return aln_range
 
+
+def map_intervals_in_sdb(seq_index_db, interval, query_seq,
+              gap_penality_factor=0.001,
+              merge_range_tol=100,
+              max_count=32,
+              max_query_count=32,
+              max_target_count=32,
+              max_aln_span=8):
+    """
+    TODO: Document
+    
+    """
+
+    assert(len(interval) == 2)
+    
+    pos_map = seq_index_db.map_positions_in_seq(interval, query_seq, 0.001, 32, 32, 32, 100)
+    
+    seqid_to_positions = {}
+    
+    for res in pos_map:
+
+        pos = res[0]
+        sid, tpos, orientation = res[1]
+        
+        seqid_to_positions.setdefault(sid, {})
+        seqid_to_positions[sid].setdefault(pos, [])
+        seqid_to_positions[sid][pos].append((tpos, orientation))
+    
+    rtn = {}
+    for sid in seqid_to_positions:
+        #print(sid, seqid_to_positions[sid])
+        if interval[0] in seqid_to_positions[sid] and interval[1] in seqid_to_positions[sid]:
+            left_p = seqid_to_positions[sid][interval[0]]
+            right_p = seqid_to_positions[sid][interval[1]]
+            if len(left_p) != 1:
+                continue
+            if len(right_p) != 1:
+                continue
+            left_p, left_o = left_p[0]
+            right_p, right_o = right_p[0]
+            if left_o != right_o:
+                continue
+          
+            rtn[sid] = (left_o, left_p, right_p)
+    return rtn
 
 def merge_regions(rgns, tol=1000):
     """ Take a list of ranges and merge them if two regions are within ``tol``.
@@ -415,3 +461,64 @@ def output_variants_to_vcf_records(variant_calls, ref_name):
                              "30", ".", ".", "GT:AD", "./1:0,1:"))
 
     return vcf_recs
+
+
+def compute_graph_diffusion_entropy(gfa_fn, max_nodes = 6000):
+    """ Give a GFA file name, compute an entropy by a simple diffusion model on the grap
+        and generate the list of the final diffusion weight for each node
+    
+    Parameters
+    ----------
+    gfa_fn : string
+        a gfa filename
+
+    Returns
+    -------
+    tuple
+        ``(entropy, list_of_diffusion_weight)``
+
+        list_of_diffusion_weight = ``[(node_id, weight), ...]`` 
+    """
+    adj_list = {}
+
+    with open(gfa_fn) as f:
+        for r in f:
+            r = r.strip().split("\t")
+            if r[0] != "L":
+                continue
+            n1 = int(r[1])
+            n2 = int(r[3])
+            weight = None
+            for f in r[6:]:
+                f = f.split(":")
+                if f[0] == "SC":
+                    weight = int(f[2])
+            if weight == None:
+                weight = 1
+            adj_list.setdefault( n1, [] )
+            adj_list[ n1 ]. append((n2, weight))
+            adj_list.setdefault( n2, [] )
+            adj_list[ n2 ]. append((n1, weight))
+    
+    n_node = len(adj_list)
+    if n_node > max_nodes:
+        ## TODO: proper message to hanle big graph
+        return None
+
+    adj_matrix = np.zeros( (n_node, n_node), dtype=np.float32 )
+    for v, ws in adj_list.items():
+        for w, weight in ws:
+            adj_matrix[v][w] = weight
+            
+    n_adj_matrix = adj_matrix / np.sum(adj_matrix, axis=1)
+    weights = []
+    one = np.ones(n_node, dtype=np.float32)/n_node
+    yy = one.copy()
+
+    for i in range(n_node):
+        yy = np.inner(n_adj_matrix, yy)
+
+    entropy = -np.sum(yy * np.log2(yy))
+    weight_list = list(enumerate(yy*n_node))
+  
+    return (entropy, weight_list)
