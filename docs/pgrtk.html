@@ -411,6 +411,28 @@ the <code class="docutils literal notranslate"><span class="pre">query_fragment_
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.get_princple_paths">
+<span class="sig-name descname"><span class="pre">get_princple_paths</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.get_princple_paths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ger the principle paths in MAPG</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_count</strong> (<em>int</em>) – minimum coverage count to be included in the graph</p></li>
+<li><p><strong>path_len_cut_off</strong> (<em>int</em>) – <p>remove short path less than path_len_cut_off when generating the principle path</p>
+<p>if the number is small, the generated principle paths will be more fragemented.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>list of paths, each path is a list of nodes</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.get_seq">
 <span class="sig-name descname"><span class="pre">get_seq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctg_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.get_seq" title="Permalink to this definition">¶</a></dt>
 <dd><p>fetch a sequence</p>
@@ -743,7 +765,7 @@ the <code class="docutils literal notranslate"><span class="pre">list_of_the_hit
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>list of node in the tuple (node, node_weight, is_leaf, global_rank, branch, branch_rank)</p>
+<dd class="field-even"><p>list of node in the tuple (node, parent_node, node_weight, is_leaf, global_rank, branch, branch_rank)</p>
 </dd>
 <dt class="field-odd">Return type</dt>
 <dd class="field-odd"><p>list</p>
