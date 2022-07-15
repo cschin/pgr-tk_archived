@@ -888,7 +888,7 @@ pub fn sort_adj_list_by_weighted_dfs(
     out
 }
 
-pub fn get_principle_paths_from_adj_list(
+pub fn get_principle_bundles_from_adj_list(
     frag_map: &ShmmrToFrags,
     adj_list: &Vec<(u32, (u64, u64, u8), (u64, u64, u8))>,
     path_len_cut_off: usize,
@@ -908,23 +908,23 @@ pub fn get_principle_paths_from_adj_list(
         }
     }
 
-    let paths: Vec<Vec<(u64, u64, u8)>> = paths
+    let long_paths: Vec<Vec<(u64, u64, u8)>> = paths
         .into_iter()
         .filter(|p| p.len() > path_len_cut_off as usize)
         .collect();
 
-    let mut main_path_bundle_vertices = FxHashSet::<(u64, u64)>::default();
+    let mut main_bundle_path_vertices = FxHashSet::<(u64, u64)>::default();
 
-    paths.into_iter().for_each(|p| {
+    long_paths.into_iter().for_each(|p| {
         p.into_iter().for_each(|v| {
-            main_path_bundle_vertices.insert((v.0, v.1));
+            main_bundle_path_vertices.insert((v.0, v.1));
         })
     });
 
     let mut g0 = DiGraphMap::<ShmmrGraphNode, ()>::new();
     adj_list.into_iter().for_each(|&(_sid, v, w)| {
-        if main_path_bundle_vertices.contains(&(v.0, v.1))
-            && main_path_bundle_vertices.contains(&(w.0, w.1))
+        if main_bundle_path_vertices.contains(&(v.0, v.1))
+            && main_bundle_path_vertices.contains(&(w.0, w.1))
         {
             g0.add_edge(
                 ShmmrGraphNode(v.0, v.1, v.2),
@@ -966,7 +966,7 @@ pub fn get_principle_paths_from_adj_list(
         }
     }
 
-    let mut principle_paths = Vec::<Vec<ShmmrGraphNode>>::new();
+    let mut principle_bundles = Vec::<Vec<ShmmrGraphNode>>::new();
 
     while starts.len() != 0 {
         let s = starts.pop().unwrap();
@@ -980,10 +980,10 @@ pub fn get_principle_paths_from_adj_list(
                 g1.remove_node(v);
                 g1.remove_node(ShmmrGraphNode(v.0, v.1, 1 - v.2));
             });
-            principle_paths.push(path);
+            principle_bundles.push(path);
         }
     }
-    principle_paths
+    principle_bundles
 }
 
 impl CompactSeqDB {
