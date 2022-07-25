@@ -940,7 +940,7 @@ impl SeqIndexDB {
         Ok(())
     }
 
-    fn write_midx_to_text_file(&self, filepath: &str) -> Result<(), std::io::Error> {
+    fn write_mapg_idx(&self, filepath: &str) -> Result<(), std::io::Error> {
         let mut writer = BufWriter::new(File::create(filepath)?);
 
         self.seq_info.as_ref().unwrap().iter().try_for_each(
@@ -989,7 +989,14 @@ impl SeqIndexDB {
             })?;
         Ok(())
     }
+   
+    // for backward compatibility 
+    pub fn write_midx_to_text_file(&self, filepath: &str) ->  Result<(), std::io::Error>  {
+        self.write_mapg_idx(filepath)
+    }
 }
+
+
 
 impl SeqIndexDB {
     // depending on the storage type, return the corresponding index
