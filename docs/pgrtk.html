@@ -145,6 +145,36 @@ a variant call record.</p>
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pgrtk.group_smps_by_principle_bundle_id">
+<span class="sig-prename descclassname"><span class="pre">pgrtk.</span></span><span class="sig-name descname"><span class="pre">group_smps_by_principle_bundle_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">smps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">len_cutoff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2500</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_length</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5000</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.group_smps_by_principle_bundle_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Filter and group SHIMMER pair output from SeqIndexDB.get_principal_bundle_decomposition()</dt><dd><p>by bundle id. This function will filter out small bundle segment with lenght smaller than
+<cite>len_curoff</cite> and merge two bundle with the same id and direction within <cite>merge_length</cite></p>
+<p>TODO: This is currently implemented in python, we plan to move this as
+Rust code in the future.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>len_cutoff</strong> (<em>int</em>) – the length cutoff used for filtering small bundle segement</p></li>
+<li><p><strong>merge_length</strong> (<em>int</em>) – the length determining if two bundles should be merged</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>a list of the lists of SHIMMER pairs tagged with bundle id, direction, position in the bundle</p>
+<p>each element of the list SHIMMER is a tuple of
+<cite>((shimmer0, shimmer1, pos0, pos1, direction),
+bundle_id, direction_to_the_bundle, postion_in bundle)</cite></p>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pgrtk.map_intervals_in_sdb">
 <span class="sig-prename descclassname"><span class="pre">pgrtk.</span></span><span class="sig-name descname"><span class="pre">map_intervals_in_sdb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq_index_db</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interval</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">query_seq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gap_penality_factor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_range_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_query_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_target_count</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_aln_span</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.map_intervals_in_sdb" title="Permalink to this definition">¶</a></dt>
 <dd><p>TODO: Document</p>
@@ -403,10 +433,77 @@ the <code class="docutils literal notranslate"><span class="pre">query_fragment_
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p>The data is written into the file at filepath</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>the adj_list is written to a file in GFA v.1 format</p>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.generate_principal_mapg_gfa">
+<span class="sig-name descname"><span class="pre">generate_principal_mapg_gfa</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.generate_principal_mapg_gfa" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convert the adjecent list of the shimmer graph shimmer_pair -&gt; GFA</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_count</strong> (<em>int</em>) – the minimum number of times a pair of shimmers must be observed to be included in the graph</p></li>
+<li><p><strong>filenpath</strong> (<em>string</em>) – the path to the output file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The data is written into the file at filepath</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.get_match_positions_with_fragment">
+<span class="sig-name descname"><span class="pre">get_match_positions_with_fragment</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seq</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.get_match_positions_with_fragment" title="Permalink to this definition">¶</a></dt>
+<dd><p>use a fragement of sequence to query the database to get all hits and sort it by the data base sequence id</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>seq</strong> (<em>list</em>) – the sequnece in bytes used for query</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a dictionary maps sequence id in the database to a list of tuple (position0, position1, direction)</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.get_principal_bundle_decomposition">
+<span class="sig-name descname"><span class="pre">get_principal_bundle_decomposition</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.get_principal_bundle_decomposition" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get the principal bundles and bundle decomposition of all seqeuences</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>min_count</strong> (<em>int</em>) – minimum coverage count to be included in the graph</p></li>
+<li><p><strong>path_len_cut_off</strong> (<em>int</em>) – <p>remove short path less than path_len_cut_off when generating the principal path</p>
+<p>if the number is small, the generated principal paths will be more fragemented.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p>a tuple consist of two lists: (principal_bundles, seqid_smps_with_bundle_id_seg_direction)</p>
+<p>principal_bundles = list of (principal_bundle_id, ave_bundle_position, list_bundle_vertex)</p>
+<p>list_of_bundle_vertex = list of (hash0:u64, hash0:u64, direction:u8)</p>
+<p>seqid_smps_with_bundle_id_seg_direction = list of shimmer pairs in the database annotated with principal bundle id and direction</p>
+<dl class="simple">
+<dt>the elements of the list are ((hash0:u64, hash1:u64, pos0:u32, pos0:u32, direction:0),</dt><dd><p>(principal_bundle_is, direction, order_in_the_bundle))</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tuple</p>
 </dd>
 </dl>
 </dd></dl>
@@ -414,7 +511,7 @@ the <code class="docutils literal notranslate"><span class="pre">query_fragment_
 <dl class="py method">
 <dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.get_principal_bundles">
 <span class="sig-name descname"><span class="pre">get_principal_bundles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.get_principal_bundles" title="Permalink to this definition">¶</a></dt>
-<dd><p>Ger the principal bundles in MAPG</p>
+<dd><p>Get the principal bundles in MAPG</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -441,6 +538,26 @@ the <code class="docutils literal notranslate"><span class="pre">query_fragment_
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>sample_name</strong> (<em>string</em>) – the sample name stored in the AGC file</p></li>
+<li><p><strong>ctg_name</strong> (<em>string</em>) – the contig name stored in the AGC file</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of bytes representing the sequence</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.get_seq_by_id">
+<span class="sig-name descname"><span class="pre">get_seq_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctg_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.get_seq_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>fetch a sequence by the sequence id in the database</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sid</strong> (<em>int</em>) – sequence id in the database</p></li>
 <li><p><strong>ctg_name</strong> (<em>string</em>) – the contig name stored in the AGC file</p></li>
 </ul>
 </dd>
@@ -579,6 +696,32 @@ than the <cite>max_unique_count</cite></p></li>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.get_sub_seq_by_id">
+<span class="sig-name descname"><span class="pre">get_sub_seq_by_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ctg_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bgn</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.get_sub_seq_by_id" title="Permalink to this definition">¶</a></dt>
+<dd><p>fetch a contiguous sub-sequence by a sequence id</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sid</strong> (<em>int</em>) – sequence id in the database</p></li>
+<li><p><strong>bgn</strong> (<em>int</em>) – the starting coordinate (0-based)</p></li>
+<li><p><strong>end</strong> (<em>int</em>) – the ending coordinate (exclusive)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>a list of bytes representing the sequence</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.get_vertex_map_from_priciple_bundles">
+<span class="sig-name descname"><span class="pre">get_vertex_map_from_priciple_bundles</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.get_vertex_map_from_priciple_bundles" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.load_from_agc_index">
@@ -777,7 +920,19 @@ the <code class="docutils literal notranslate"><span class="pre">list_of_the_hit
 <dl class="py method">
 <dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.write_mapg_idx">
 <span class="sig-name descname"><span class="pre">write_mapg_idx</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pgrtk.pgrtk.SeqIndexDB.write_mapg_idx" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Write addtional meta data for GFA into a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>filenpath</strong> (<em>string</em>) – the path to the output file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The data is written into the file at filepath</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pgrtk.pgrtk.SeqIndexDB.write_midx_to_text_file">
